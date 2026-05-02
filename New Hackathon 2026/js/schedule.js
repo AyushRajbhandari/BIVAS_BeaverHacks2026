@@ -2,7 +2,7 @@ const WEEK_DAYS = [
   { key: "M", label: "Mon" },
   { key: "T", label: "Tue" },
   { key: "W", label: "Wed" },
-  { key: "Th", label: "Thu" },
+  { key: "R", label: "Thu" },
   { key: "F", label: "Fri" },
 ];
 
@@ -27,10 +27,40 @@ function gapLabel(mins) {
   return               { text:`${mins} min - good`,   cls:"gap-good"  };
 }
 
+function getMealBreak(fromClass, toClass) {
+  const breakStart = toMinutes(fromClass.end);
+  const breakEnd = toMinutes(toClass.start);
+  if (breakEnd - breakStart < 30) return null;
+
+  const meals = [
+    { name: "Lunch", start: toMinutes("11:30"), end: toMinutes("14:00") },
+    { name: "Dinner", start: toMinutes("17:00"), end: toMinutes("19:00") },
+  ];
+
+  for (const meal of meals) {
+    const start = Math.max(breakStart, meal.start);
+    const end = Math.min(breakEnd, meal.end);
+    if (end - start >= 30) {
+      return { name: meal.name, start, end };
+    }
+  }
+
+  return null;
+}
+
+function formatMinutes(mins) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return formatTime(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+}
+
+function normalizeDays(days) {
+  return (days || "").replaceAll("Th", "R");
+}
+
 function classMeetsOnDay(cls, dayKey) {
-  const days = cls.days || "";
-  if (dayKey === "Th") return days.includes("Th");
-  if (dayKey === "T") return days.replaceAll("Th", "").includes("T");
+  const days = normalizeDays(cls.days);
+  if (dayKey === "R") return days.includes("R");
   return days.includes(dayKey);
 }
 
@@ -129,7 +159,7 @@ function renderWeekOverview() {
         const item = document.createElement("span");
         item.className = "week-class-pill";
         item.style.borderColor = cls.color;
-        item.textContent = `${cls.name} ${formatTime(cls.start)}`;
+        item.textContent = `${cls.crn} ${cls.name} ${formatTime(cls.start)}`;
         items.appendChild(item);
       });
     }
@@ -154,7 +184,7 @@ function renderCards(classes) {
     card.style.borderLeftColor = cls.color;
     card.innerHTML = `
       <div class="name">${index + 1}. ${cls.name} - ${cls.title}</div>
-      <div class="details">${cls.building} | Room ${cls.room} | ${formatTime(cls.start)}-${formatTime(cls.end)} | ${cls.days}</div>
+      <div class="details">CRN ${cls.crn} | ${cls.building} | Room ${cls.room} | ${formatTime(cls.start)}-${formatTime(cls.end)} | ${normalizeDays(cls.days)}</div>
     `;
     card.addEventListener("click", () => {
       document.querySelectorAll(".class-card").forEach(c => c.classList.remove("active"));
@@ -171,6 +201,14 @@ function renderCards(classes) {
       badge.className = `gap-badge ${badgeCls}`;
       badge.textContent = `Next: ${text} until ${next.name}`;
       container.appendChild(badge);
+
+      const meal = getMealBreak(cls, next);
+      if (meal) {
+        const mealBadge = document.createElement("div");
+        mealBadge.className = "meal-badge";
+        mealBadge.textContent = `${meal.name}: ${formatMinutes(meal.start)}-${formatMinutes(meal.end)} available`;
+        container.appendChild(mealBadge);
+      }
     }
   });
 }
@@ -199,11 +237,26 @@ function renderTimeline(classes) {
     block.style.left = `${left}%`;
     block.style.width = `${width}%`;
     block.style.background = cls.color;
-    block.title = `${cls.name}: ${formatTime(cls.start)}-${formatTime(cls.end)}`;
-    block.textContent = cls.name;
+    block.title = `CRN ${cls.crn}: ${cls.name} ${formatTime(cls.start)}-${formatTime(cls.end)}`;
+    block.textContent = `${cls.crn}`;
     block.addEventListener("click", () => focusBuilding(cls));
     bar.appendChild(block);
   });
+
+  for (let i = 0; i < classes.length - 1; i++) {
+    const meal = getMealBreak(classes[i], classes[i + 1]);
+    if (!meal) continue;
+
+    const left = ((meal.start - DAY_START) / TOTAL * 100).toFixed(1);
+    const width = ((meal.end - meal.start) / TOTAL * 100).toFixed(1);
+    const block = document.createElement("div");
+    block.className = "meal-block";
+    block.style.left = `${left}%`;
+    block.style.width = `${width}%`;
+    block.title = `${meal.name}: ${formatMinutes(meal.start)}-${formatMinutes(meal.end)}`;
+    block.textContent = meal.name;
+    bar.appendChild(block);
+  }
 
   for (let h = 8; h <= 18; h += 2) {
     const label = document.createElement("span");
@@ -211,3 +264,4 @@ function renderTimeline(classes) {
     labels.appendChild(label);
   }
 }
+
