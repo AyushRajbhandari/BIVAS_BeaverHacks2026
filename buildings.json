@@ -3,7 +3,7 @@
   "DEAR": { "name": "Dearborn Hall", "lat": 44.56736, "lng": -123.27554 },
   "WNGR": { "name": "Weniger Hall", "lat": 44.56785, "lng": -123.27722 },
   "LPSC": { "name": "Linus Pauling Science Center", "lat": 44.56653, "lng": -123.28362 },
-  "LINC": {"name": "Learning Innovation Center", "lat": 44.56584, "lng": -123.28139744601808 }
+  "LINC": {"name": "Learning Innovation Center", "lat": 44.56584, "lng": -123.28139744601808 },
   "ROG": { "name": "Rogers Hall", "lat": 44.56584, "lng": -123.28153 },
   "MU": { "name": "Memorial Union", "lat": 44.56500, "lng": -123.27890 },
   "VLIB": { "name": "Valley Library", "lat": 44.56534, "lng": -123.27599 },

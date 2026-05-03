@@ -4,15 +4,19 @@ def init_database():
     # Create the database and table
     conn = sqlite3.connect("classes.db")
     cursor = conn.cursor()
+
+    cursor.execute("DROP TABLE IF EXISTS classes")
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS classes (
             crn TEXT PRIMARY KEY,
-            code TEXT,
+            name TEXT,
+            title TEXT,
             building TEXT,
+            room TEXT,
+            days TEXT,
             start_time TEXT,
-            end_time TEXT,
-            days TEXT
+            end_time TEXT
         )
     """)
     conn.commit()
@@ -34,9 +38,9 @@ def save_class(course_dict):
     
     for crn, info in course_dict.items():
         cursor.execute('''
-            INSERT OR REPLACE INTO classes (crn, code, building, start_time, end_time, days)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (info['crn'], info['code'], info['building'], info['start_time'], info['end_time'], info['days']))
+            INSERT OR REPLACE INTO classes (crn, name, title, building, room, days, start_time, end_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (info['crn'], info['name'], info["title"], info['building'], info["room"], info["days"], info['start_time'], info['end_time']))
     
     conn.commit()
     conn.close()

@@ -8,7 +8,9 @@ def parse_course(raw_data):
     if not crn:
         return {} # Skip items with no CRN
 
-    code = raw_data.get('code', 'N/A')
+    name = raw_data.get('code', 'N/A')
+    course_title = raw_data.get('title', 'N/A')
+
     html = raw_data.get('meeting_html', '')
     campus = raw_data.get('campus', '')
     class_type = raw_data.get('sche_type_clss_fild', '')
@@ -23,19 +25,25 @@ def parse_course(raw_data):
 
     res = {
         "crn": crn,
-        "code": code,
+        "name": name,
+        "title": course_title,
         "building": default_bldg,
+        "room": "TBA",
+        "days": "TBA",
         "start_time": None,
         "end_time": None,
-        "days": "TBA"
     }
 
     # 3. Only parse HTML if it's NOT empty
     if html and html.strip():
-        # Building Search (Specifically look for the <a> tag link)
-        build_match = re.search(r'target="_blank">([A-Z]{2,})', html)
-        if build_match:
-            res["building"] = build_match.group(1)
+        # 2. Capture Building and Room (e.g., AUST 226)
+        # This looks specifically for the pattern INSIDE the <a> tag: 
+        # Uppercase letters, a space, then the room number, followed by a dash.
+        room_match = re.search(r'>([A-Z]+)\s+([\w\d-]+)\s+-', html)
+    
+        if room_match:
+            res["building"] = room_match.group(1) # AUST
+            res["room"] = room_match.group(2)     # 226
         
         # Days and Times Search
         time_match = re.search(r'([MTWRFS]+)\s+([\d:apm]+)-([\d:apm]+)', html)

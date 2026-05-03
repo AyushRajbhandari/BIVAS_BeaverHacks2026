@@ -85,6 +85,7 @@ def main():
     for course in all_final_results[:10]: 
         print(f"Code: {course['code']} | CRN: {course['crn']} | Meetings: {course['meeting_html']}")
     
+    
     print(f"\nTotal detailed records gathered: {len(all_final_results)}")
 
 if __name__ == "__main__":
