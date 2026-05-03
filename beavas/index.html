@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OSU Class Map</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <header>
+    <h1>OSU Class Map</h1>
+    <span class="subtitle">Enter CRNs to see your schedule + campus route</span>
+  </header>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="input-section">
+        <label>CRNs (one per line)</label>
+        <textarea id="crn-input" placeholder="11111&#10;22222&#10;33333"></textarea>
+        <button onclick="loadClasses()">Load classes</button>
+      </div>
+      <div class="week-section" id="week-section">
+        <div class="day-selector" id="day-selector"></div>
+        <div class="week-overview" id="week-overview"></div>
+      </div>
+      <div id="class-list"></div>
+      <div class="timeline-section" id="timeline-section" style="display:none;">
+        <label>Your day: <span id="active-day-label"></span></label>
+        <div class="timeline-bar" id="timeline-bar"></div>
+        <div class="timeline-labels" id="timeline-labels"></div>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <!-- Load app code first so the Google Maps callback can find initMap. -->
+  <script src="js/mock.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/schedule.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBkkQdJQ9Ph788w20LzW-DNsOku-v8EOmo&callback=initMap" async defer></script>
+
+</body>
+</html>
