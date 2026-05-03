@@ -8,14 +8,10 @@ cursor.execute("""
     CREATE TABLE IF NOT EXISTS classes (
         crn TEXT PRIMARY KEY,
         code TEXT,
-        title TEXT,
-        subject TEXT,
-        days TEXT,
-        time TEXT,
         building TEXT,
-        room TEXT,
-        instructor TEXT,
-        term TEXT
+        start_time TEXT,
+        end_time TEXT,
+        days TEXT
     )
 """)
 conn.commit()
