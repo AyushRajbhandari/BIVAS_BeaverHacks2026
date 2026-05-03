@@ -1,0 +1,7 @@
+Flask
+flask-cors
+requests
+beautifulsoup4
+
+# sqlite3 is included with Python.
+# The frontend uses vanilla HTML/CSS/JS and loads Google Maps in the browser.
