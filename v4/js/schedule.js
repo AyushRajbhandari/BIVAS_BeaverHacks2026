@@ -102,30 +102,104 @@ function assignChronologicalColors(classes) {
   }));
 }
 
-function sameStartConflicts(classes) {
-  const byStart = new Map();
-  classes.forEach(cls => {
-    const group = byStart.get(cls.start) || [];
-    group.push(cls);
-    byStart.set(cls.start, group);
-  });
+function professorNameForClass(cls) {
+  return cls.professor || cls.instructor || cls.teacher || cls.professor_name || "";
+}
 
-  return [...byStart.entries()]
-    .filter(([, group]) => group.length > 1)
-    .map(([start, group]) => ({ start, classes: group }));
+function ratingForClass(cls) {
+  return cls.rmpRating || cls.rmp_rating || cls.professorRating || cls.professor_rating || cls.rating || "";
+}
+
+function formatProfessorRating(rating) {
+  if (!rating) return "Not available";
+
+  const numericRating = Number(rating);
+  if (!Number.isNaN(numericRating)) return `${numericRating.toFixed(1)}/5`;
+
+  return `${rating}/5`;
+}
+
+function withProfessorRating(cls, rating) {
+  return {
+    ...cls,
+    rmpRating: rating || ratingForClass(cls) || null,
+  };
+}
+
+async function getProfessorRating(professor) {
+  if (!professor) return null;
+
+  try {
+    const response = await fetch(`http://localhost:5000/api/rmp?professor=${encodeURIComponent(professor)}`);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    return data.rating || null;
+  } catch (err) {
+    console.error("Professor rating unavailable:", err);
+    return null;
+  }
+}
+
+async function addProfessorRatings(classes) {
+  return Promise.all(classes.map(async cls => {
+    if (ratingForClass(cls)) return withProfessorRating(cls);
+    if (cls.rmpRatingChecked) return withProfessorRating(cls, null);
+
+    const professor = professorNameForClass(cls);
+    if (!professor) return withProfessorRating(cls, null);
+
+    const rating = await getProfessorRating(professor);
+    return withProfessorRating(cls, rating);
+  }));
+}
+
+function overlappingClassConflicts(classes) {
+  const conflicts = [];
+  const sortedClasses = [...classes].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+
+  for (let i = 0; i < sortedClasses.length; i++) {
+    const current = sortedClasses[i];
+    const currentStart = toMinutes(current.start);
+    const currentEnd = toMinutes(current.end);
+
+    for (let j = i + 1; j < sortedClasses.length; j++) {
+      const next = sortedClasses[j];
+      const nextStart = toMinutes(next.start);
+      const nextEnd = toMinutes(next.end);
+
+      if (nextStart >= currentEnd) break;
+
+      const overlapStart = Math.max(currentStart, nextStart);
+      const overlapEnd = Math.min(currentEnd, nextEnd);
+
+      if (overlapStart < overlapEnd) {
+        conflicts.push({
+          classes: [current, next],
+          overlapStart,
+          overlapEnd,
+        });
+      }
+    }
+  }
+
+  return conflicts;
 }
 
 async function loadClasses() {
   const input = document.getElementById("crn-input").value;
   const crns = input.split("\n").map(c => c.trim()).filter(Boolean);
   const container = document.getElementById("class-list");
+  const mascot = document.getElementById("sidebar-mascot");
 
   if (!crns.length) { alert("Enter at least one CRN."); return; }
+  if (mascot) mascot.classList.add("hidden");
 
   const results = await Promise.all(crns.map(getClass));
   loadedClasses = results
     .filter(Boolean)
     .sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+  loadedClasses = await addProfessorRatings(loadedClasses);
   loadedClasses = assignChronologicalColors(loadedClasses);
 
   container.innerHTML = "";
@@ -167,7 +241,7 @@ function renderConflictWarning(classes) {
   const warningContainer = document.getElementById("schedule-warning");
   if (!warningContainer) return;
 
-  const conflicts = sameStartConflicts(classes);
+  const conflicts = overlappingClassConflicts(classes);
   warningContainer.innerHTML = "";
 
   conflicts.forEach(conflict => {
@@ -175,7 +249,7 @@ function renderConflictWarning(classes) {
     warning.className = "conflict-warning";
     warning.innerHTML = `
       <strong>Schedule conflict</strong>
-      <span>${conflict.classes.map(cls => cls.name).join(" and ")} both start at ${formatTime(conflict.start)}.</span>
+      <span>${conflict.classes.map(cls => cls.name).join(" and ")} overlap from ${formatMinutes(conflict.overlapStart)} to ${formatMinutes(conflict.overlapEnd)}.</span>
     `;
     warningContainer.appendChild(warning);
   });
@@ -258,6 +332,10 @@ function renderCards(classes) {
   }
 
   classes.forEach((cls, index) => {
+    const professor = professorNameForClass(cls);
+    const rating = ratingForClass(cls);
+    const ratingText = formatProfessorRating(rating);
+    const professorText = professor ? `${professor} · ${ratingText}` : ratingText;
     const card = document.createElement("div");
     card.className = "class-card";
     card.style.setProperty("--accent", cls.displayColor || "#378ADD");
@@ -265,6 +343,7 @@ function renderCards(classes) {
       <div class="class-time">${formatTime(cls.start)}-${formatTime(cls.end)}</div>
       <div class="name">${index + 1}. ${cls.name}</div>
       <div class="details">${cls.title}</div>
+      <div class="professor-rating">Professor rating: ${professorText}</div>
       <div class="meta-row">
         <span>CRN ${cls.crn}</span>
         <span>${cls.building}</span>
@@ -335,7 +414,6 @@ function renderTimeline(classes) {
     block.style.width = `${width}%`;
     block.style.background = cls.displayColor || "#378ADD";
     block.title = `${cls.name}: ${formatTime(cls.start)}-${formatTime(cls.end)}`;
-    block.textContent = cls.name || cls.crn;
     bar.appendChild(block);
   });
 

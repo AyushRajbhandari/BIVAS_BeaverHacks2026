@@ -26,7 +26,7 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: #c0baba;
+  background: #ff8e32;
   border-bottom: 1px solid #dce2e8;
 }
 
@@ -56,7 +56,7 @@ header h1 {
   gap: 12px;
   overflow-y: auto;
   padding: 16px;
-  background: #aaa9a9;
+  background: #fff5e2;
   border-right: 1px solid #dce2e8;
 }
 
@@ -122,6 +122,31 @@ header h1 {
 
 .input-section button:hover {
   background: #2a3741;
+}
+
+.sidebar-mascot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 4px 2px;
+}
+
+.sidebar-mascot.hidden {
+  display: none;
+}
+
+.sidebar-mascot img {
+  width: min(100%, 280px);
+  height: auto;
+  object-fit: contain;
+}
+
+.sidebar-mascot span {
+  color: #51606d;
+  font-size: 11px;
+  font-weight: 720;
 }
 
 .week-heading {
@@ -265,6 +290,13 @@ header h1 {
   margin-top: 1px;
   color: #51606d;
   font-size: 13px;
+}
+
+.professor-rating {
+  margin-top: 7px;
+  color: #35424d;
+  font-size: 12px;
+  font-weight: 760;
 }
 
 .meta-row {
