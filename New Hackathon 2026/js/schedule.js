@@ -6,6 +6,8 @@ const WEEK_DAYS = [
   { key: "F", label: "Fri" },
 ];
 
+const CLASS_COLORS = ["#FFADAD", "#FFD6A5", "#FFD1DC", "#FDFFB6", "#FFFFD1", "#CAFFBF", "#9BE2A4", "#9BF6FF", "#A0C4FF", "#BDB2FF", "#D6B2FF", "#FFC6FF"]
+
 let loadedClasses = [];
 let selectedDay = "M";
 
