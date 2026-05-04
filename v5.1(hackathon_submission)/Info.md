@@ -8,5 +8,3 @@ This starts both the Flask backend on localhost:5000 and the frontend on localho
 Open http://localhost:8080 in your browser.
 
 Press Ctrl+C in the terminal to stop both servers.
-
-May or may not add RMP feature.
